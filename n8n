@@ -1,0 +1,341 @@
+{
+  "name": "AI Multi Comparison TXT",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        }
+      },
+      "id": "c7081eb4-191d-47a8-ba79-111fc71018cf",
+      "name": "Cron",
+      "type": "n8n-nodes-base.cron",
+      "position": [
+        -336,
+        624
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "filePath": "C:/Users/Miguel Ramirez/Desktop/preguntas.txt"
+      },
+      "id": "555f2ee9-eeaa-4f04-9fdb-f510970662aa",
+      "name": "Read TXT",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "position": [
+        -144,
+        624
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "7de02166-d476-4f43-87de-9f7a5f6fd7a2",
+      "name": "Binary to Text",
+      "type": "n8n-nodes-base.moveBinaryData",
+      "position": [
+        64,
+        624
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "functionCode": "const current = $json.data;\nconst staticData = getWorkflowStaticData('global');\n\nif (staticData.last === current) {\n  return [];\n}\n\nstaticData.last = current;\n\nreturn [{ json: { prompt: current } }];"
+      },
+      "id": "b3b1eb6d-8215-4af0-ab20-d9457e52b327",
+      "name": "Check Change",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        272,
+        624
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "ab613365-3505-4629-8624-619efece5edf",
+      "name": "Ask ChatGPT",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        464,
+        528
+      ],
+      "typeVersion": 4.4,
+      "credentials": {
+        "openAiApi": {
+          "id": "arhGW2t8vHACTSZX",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{ json: { chatgpt: $json.choices[0].message.content } }];"
+      },
+      "id": "efb2ed91-9e1f-4e7c-b3cb-7923ebc039b1",
+      "name": "Format GPT",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        672,
+        528
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyCwqcmEUCsUsn5p29WkP1GNfQNMWGRiEVE",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "d3d08084-5613-403f-a6d1-2866da3b1be0",
+      "name": "Ask Gemini",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        464,
+        720
+      ],
+      "typeVersion": 4.4
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{ json: { gemini: $json.candidates[0].content.parts[0].text } }];"
+      },
+      "id": "29eb9ab9-a1cd-4b2a-8e06-691b589712f0",
+      "name": "Format Gemini",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        672,
+        720
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "options": {}
+      },
+      "id": "03b0d638-36dd-4fa6-b9f9-0918370015d3",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        864,
+        624
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "4ae3ff07-ad96-43c3-a361-6ba961b951a1",
+      "name": "Ask Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1072,
+        624
+      ],
+      "typeVersion": 4.4
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{ json: { data: $json.content[0].text } }];"
+      },
+      "id": "4e433854-14e0-4807-9a35-00934ff5c071",
+      "name": "Prepare File",
+      "type": "n8n-nodes-base.function",
+      "position": [
+        1264,
+        624
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "fileName": "C:/Users/TU_USUARIO/Desktop/preguntas.txt",
+        "options": {}
+      },
+      "id": "1f55718f-33d6-401e-9da2-641e29babea3",
+      "name": "Write TXT",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "position": [
+        1472,
+        624
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cron": {
+      "main": [
+        [
+          {
+            "node": "Read TXT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read TXT": {
+      "main": [
+        [
+          {
+            "node": "Binary to Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Binary to Text": {
+      "main": [
+        [
+          {
+            "node": "Check Change",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Change": {
+      "main": [
+        [
+          {
+            "node": "Ask ChatGPT",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Ask Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask ChatGPT": {
+      "main": [
+        [
+          {
+            "node": "Format GPT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask Gemini": {
+      "main": [
+        [
+          {
+            "node": "Format Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format GPT": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Gemini": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Ask Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask Claude": {
+      "main": [
+        [
+          {
+            "node": "Prepare File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare File": {
+      "main": [
+        [
+          {
+            "node": "Write TXT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1416301f-ec16-4cf8-b913-6f2a9b588b2e",
+  "meta": {
+    "instanceId": "d14f7821bbd09c045c3952163c55bcf2d01313214d0749c643d7b6603b060323"
+  },
+  "id": "ZqimgU4hOmyL7msK",
+  "tags": []
+}
